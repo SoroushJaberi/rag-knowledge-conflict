@@ -1,0 +1,10 @@
+{"chunk_start": 0, "n_prompts": 400, "seconds": 37.47, "energy_j": 2677.8, "generated_tokens": 2644}
+{"chunk_start": 400, "n_prompts": 400, "seconds": 2.32, "energy_j": 848.6, "generated_tokens": 2573}
+{"chunk_start": 800, "n_prompts": 400, "seconds": 1.86, "energy_j": 695.8, "generated_tokens": 2384}
+{"chunk_start": 1200, "n_prompts": 400, "seconds": 6.87, "energy_j": 990.8, "generated_tokens": 2474}
+{"chunk_start": 1600, "n_prompts": 400, "seconds": 1.94, "energy_j": 695.3, "generated_tokens": 2417}
+{"chunk_start": 2000, "n_prompts": 400, "seconds": 2.08, "energy_j": 726.5, "generated_tokens": 2541}
+{"chunk_start": 2400, "n_prompts": 400, "seconds": 1.83, "energy_j": 694.5, "generated_tokens": 2425}
+{"chunk_start": 2800, "n_prompts": 400, "seconds": 1.8, "energy_j": 663.9, "generated_tokens": 2354}
+{"chunk_start": 3200, "n_prompts": 400, "seconds": 1.91, "energy_j": 705.8, "generated_tokens": 2407}
+{"chunk_start": 3600, "n_prompts": 400, "seconds": 2.03, "energy_j": 714.3, "generated_tokens": 2441}

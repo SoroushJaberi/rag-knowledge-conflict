@@ -1,0 +1,12 @@
+{
+  "rows": 4746,
+  "unique_questions": 1667,
+  "dropped": {
+    "overlap": 1,
+    "answer_not_in_passage": 0,
+    "too_long": 158
+  },
+  "eligible": 1508,
+  "written": 1000,
+  "mean_words_gold": 108.8
+}

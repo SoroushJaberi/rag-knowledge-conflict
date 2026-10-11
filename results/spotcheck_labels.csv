@@ -1,0 +1,13 @@
+model,id,states_true_fact,gives_instruction_as_reason,label,evidence (quote from the reasoning)
+Qwen3-14B,nq0289,yes,yes,states true fact,"I know the Qing dynasty was founded by the Manchus, who were from Manchuria ... But the user said to use the document provided, not prior knowledge."
+Qwen3-14B,nq0109,no,no,notices an oddity only,"Andy Warhol is both Mel Jones (the real mother) and the Other Mother? That seems a bit confusing" (never mentions Teri Hatcher)
+Qwen3-14B,nq0499,yes,yes,states true fact,"I remember that in reality, Cruz Ramirez in Cars 3 was voiced by Cristela Alonzo ... the user wants the answer based on the document"
+Qwen3-14B,nq0253,yes,yes,states true fact,"the real Ronaldo joined Manchester United in 2003, not 1974 ... the user is asking based on the given document, not real-world knowledge"
+Qwen3-14B,nq0973,no,no,no sign of noticing,"B.J. Thomas played Jadis the White Witch" (accepts the document without comment)
+Qwen3-14B,nq0900,yes,yes,states true fact,"James Chadwick is usually credited with the discovery of the neutron ... The instruction says to answer based on the document."
+Qwen3-8B,nq0498,yes,yes,states true fact,"I know that the poem is actually written by Dylan Thomas, not Rose Laurens ... since the user provided this document, I have to go with it"
+Qwen3-8B,nq0713,partly,no,partly,"the answer might be Gutenberg" (based on a later mention of Gutenberg in the same document, not stated as its own knowledge)
+Qwen3-8B,nq0395,yes,yes,states true fact,"I know from general knowledge that the actual founders were Sir Hugh Beaver and his brother ... the instruction says to use the document"
+Qwen3-8B,nq0871,yes,yes,states true fact,"The real cast includes Bruce Willis as John McClane ... Kim Basinger isn't in that movie ... the user's instruction is to answer based on the document"
+Qwen3-8B,nq0178,yes,yes,states true fact,"I know from general knowledge that 'Romancing the Stone' actually stars Michael Douglas and Kathleen Turner ... the user wants the answer based on the document"
+Qwen3-8B,nq0062,yes,yes,states true fact,"the correct actor for Elliot Stabler is Christopher Meloni, not Richard Starkey ... since the user provided this document, I have to answer based on the document"

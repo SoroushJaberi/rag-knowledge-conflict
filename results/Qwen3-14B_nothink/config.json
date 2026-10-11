@@ -1,0 +1,14 @@
+{
+  "model": "Qwen/Qwen3-14B",
+  "think": false,
+  "prompt": "base",
+  "decoding": {
+    "temperature": 0.7,
+    "top_p": 0.8,
+    "top_k": 20
+  },
+  "max_new_tokens": 64,
+  "engine": "vllm",
+  "seed": 13,
+  "n_items": 1000
+}

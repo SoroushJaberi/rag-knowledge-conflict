@@ -1,0 +1,7 @@
+vllm            # fast inference for the model runs (GPU; Colab / Kaggle / rented GPU)
+transformers    # Hugging Face fallback engine (--engine hf) and tokenizers
+torch
+nvidia-ml-py    # GPU energy counter (optional: energy is left empty without it)
+datasets        # rebuilds data/items.jsonl with prepare_data.py
+numpy
+matplotlib

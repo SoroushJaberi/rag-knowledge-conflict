@@ -1,0 +1,11 @@
+# Rebuilt locally with prepare_data.py (not redistributed)
+data/items.jsonl
+
+# Uncompressed run outputs: the repository keeps predictions.jsonl.gz
+results/**/predictions.jsonl
+
+# Smoke tests and caches
+smoke/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
