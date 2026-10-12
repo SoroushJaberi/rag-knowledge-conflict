@@ -53,12 +53,15 @@ The answer format and the "I don't know" option are the same in all prompts.
   tokens (section 0 of `results_v2/summary_step1.md`), so a 2,048 budget would be almost the same as no budget.
 - A cap can only shorten thinking. To test *more* thinking than the model chooses, `wait1` replaces the model's first
   attempt to stop with "Wait", as in s1 (Muennighoff et al., 2025).
-- With per-request seeds, a budget run shares its random numbers with the unlimited run of the same seed, so the
-  comparisons between budgets are paired.
+- A budget run uses the same per-request seeds as the unlimited run, but its traces are not exact truncations of
+  the unlimited traces: GPU arithmetic in vLLM varies slightly with batch composition and prompt caching, and one
+  different token makes two traces diverge (seen in the smoke test on Qwen3-0.6B: the `wait1` trace was shorter than
+  the unlimited one for 3 of 15 questions). Comparisons between budgets are therefore paired by question, not by trace.
 
 ### Seeds
-Every request has its own seed, derived from (seed, question, condition, step), so results do not depend on batching or
-on resuming. v1 used one seed per batch; v1 is kept as a third replicate. Greedy decoding is not used as a control:
+Every request has its own seed, derived from (seed, question, condition, step), so the random numbers do not depend on
+batching or on resuming. Outputs can still differ slightly between runs, because vLLM's GPU arithmetic depends on
+batch composition. v1 used one seed per batch; v1 is kept as a third replicate. Greedy decoding is not used as a control:
 the Qwen3 model card advises against it in thinking mode.
 
 ### Known facts
