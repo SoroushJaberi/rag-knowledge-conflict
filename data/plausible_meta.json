@@ -1,0 +1,17 @@
+{
+  "generator": "microsoft/phi-4",
+  "prompt": "Here is a quiz question and its correct answer.\n\nQuestion: {q}\nCorrect answer: {a}\n\nWrite one wrong answer that a well-informed person could find believable: the same kind of thing as the correct answer (a person for a person, a year for a year, a place for a place, a number for a number), close to the truth, but definitely not correct and not another name for the correct answer. Reply with the wrong answer only, in a few words.",
+  "samples_per_item": 5,
+  "temperature": 0.8,
+  "top_p": 0.95,
+  "seed": 13,
+  "items": 1000,
+  "kept": 841,
+  "dropped_first_reason": {
+    "already in passage": 66,
+    "overlaps true answer": 32,
+    "too long": 22,
+    "different type": 38,
+    "replacement failed": 1
+  }
+}

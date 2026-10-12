@@ -162,6 +162,30 @@ def test_plausible_substitution():
     assert classify("Mali", it["org_answer"], planted_answer(it, "plausible")) == "substituted"
 
 
+def test_plausible_filters_only_remove_questions():
+    import tempfile
+    from plausible import format_ok, load_items
+    item = {"org_answer": ["Norway"]}
+    assert format_ok(item, "Sweden") and format_ok(item, "Czech Republic")
+    assert not format_ok(item, "Sweden won the most medals") and not format_ok(item, "Tuscany (a place for a place)")
+    assert not format_ok(item, "Canberra, Australia") and format_ok({"org_answer": ["Paris, Texas"]}, "Dallas, Texas")
+    with tempfile.TemporaryDirectory() as d:
+        base = {"question": "q", "sub_answer": ["X"], "sub_context": "X", "irr_context": "", "irr_source": ""}
+        items = [dict(base, id="a", org_answer=["Oslo"], org_context="Oslo is big."),
+                 dict(base, id="b", org_answer=["Bergen"], org_context="Bergen is wet."),
+                 dict(base, id="c", org_answer=["Tromso"], org_context="Tromso is cold.")]
+        Path(d, "items.jsonl").write_text("".join(json.dumps(i) + "\n" for i in items), encoding="utf-8")
+        answers = [("a", "Stockholm"), ("b", "Malmo (a place for a place)"), ("c", "Narvik")]
+        Path(d, "plausible_answers.jsonl").write_text(
+            "".join(json.dumps({"id": i, "plaus_answer": c}) + "\n" for i, c in answers), encoding="utf-8")
+        has = lambda **kw: [it["id"] for it in load_items(Path(d, "items.jsonl"), Path(d, "plausible_answers.jsonl"), **kw)
+                            if "plaus_context" in it]
+        assert has() == ["a", "c"] and has(filters=False) == ["a", "b", "c"]
+        Path(d, "plausible_checks.jsonl").write_text(json.dumps({"id": "a", "p_also_correct": 0.1}) + "\n" +
+                                                     json.dumps({"id": "c", "p_also_correct": 0.7}) + "\n", encoding="utf-8")
+        assert has() == ["a"]
+
+
 def test_replacement_rule_reproduces_nq_swap():
     path = Path("data/items.jsonl")
     if not path.exists():

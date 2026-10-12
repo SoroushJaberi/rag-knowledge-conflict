@@ -78,7 +78,16 @@ sign test on the facts whose outcome changed).
   this rule reproduces NQ-Swap's wrong passage exactly for 973 of 1,000 items (`python plausible.py check`); the other
   27 differ because NQ-Swap also replaced digits inside longer numbers (for example "2010" became "2047th").
 - Only the generated answers are stored (`data/plausible_answers.jsonl`); the passages are rebuilt from NQ-Swap.
-- Plausibility is not rated by people; the generated pairs should be read and a sample checked by hand.
+- Two filters were added after generation (13 Oct 2026), after reading a random sample of 30 generated pairs and
+  before any result on plausible documents existed. They only remove questions, so earlier runs stay valid:
+  - a format rule: no brackets, at most one word longer than the longest true answer, no comma unless a true answer
+    has one. The sample showed answers with comments, such as "Tuscany (a place for a place)" or "AFC, by a narrow
+    margin", which make the passage less believable;
+  - a verification: the generator model, without sampling, answers whether the proposed answer is also a correct
+    answer (some questions have several right answers; the sample had "John Cabot" for an early voyage to
+    Newfoundland). Questions with P(yes) ≥ 0.5 are removed.
+  `python plausible.py check` prints how many questions each step removes.
+- Plausibility is not rated by people; a random sample of the remaining pairs should be checked by hand.
 - Main use: Step 2. A detector that works only on absurd swaps would not be useful.
 
 ### Labels for the reasoning traces (`trace_labels.py`)

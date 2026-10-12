@@ -6,8 +6,16 @@ are close to the truth. The passage is rebuilt by replacing every mention of the
 longest answer first), and automatic checks keep a candidate only if it is clearly different from the true answer and
 the new passage states it and no longer contains the true answer.
 
+Two filters were added after generation, before any result on plausible documents was looked at (13 Oct 2026). They
+only remove questions, so runs made before them stay valid:
+  format rule   no brackets, at most one word longer than the longest true answer, no comma unless a true answer has
+                one ("Tuscany (a place for a place)", "Sweden won the most medals", "J.J. Thomson, 1897")
+  verification  the generator model, without sampling, is asked whether the proposed answer is also a correct answer
+                (questions can have several right answers); questions with P(yes) >= 0.5 are removed
+
 python plausible.py generate              (GPU, vLLM; writes data/plausible_answers.jsonl, stored in the repository)
-python plausible.py check                 (no GPU; replays NQ-Swap's own swaps with our replacement rule)
+python plausible.py verify                (GPU, vLLM; writes data/plausible_checks.jsonl, stored in the repository)
+python plausible.py check                 (no GPU; replays NQ-Swap's own swaps with our replacement rule, counts)
 """
 import argparse
 import json
@@ -15,6 +23,11 @@ import re
 from pathlib import Path
 
 from scoring import contains, normalize
+
+VERIFY_PROMPT = ("Question: {q}\nAnswer key: {a}\nProposed answer: {c}\n\nIs the proposed answer also a correct answer "
+                 "to this question (for example another valid answer, or the same thing under another name)? "
+                 "Answer with yes or no.")
+VERIFY_MAX = 0.5  # questions whose proposed answer gets P(yes) >= this are removed
 
 GEN_PROMPT = ("Here is a quiz question and its correct answer.\n\nQuestion: {q}\nCorrect answer: {a}\n\n"
               "Write one wrong answer that a well-informed person could find believable: the same kind of thing as the "
@@ -63,18 +76,37 @@ def check(item, cand):
     return passage, None
 
 
-def load_items(path="data/items.jsonl", plausible="data/plausible_answers.jsonl"):
-    """Items with `plaus_answer` and `plaus_context` added where a checked plausible answer exists."""
+def format_ok(item, cand):
+    """Post-generation format rule (see the module docstring)."""
+    longest = max(len(a.split()) for a in item["org_answer"])
+    return ("(" not in cand and len(cand.split()) <= longest + 1
+            and ("," not in cand or any("," in a for a in item["org_answer"])))
+
+
+def checks_path(plausible):
+    return Path(plausible).with_name("plausible_checks.jsonl")
+
+
+def load_items(path="data/items.jsonl", plausible="data/plausible_answers.jsonl", filters=True):
+    """Items with `plaus_answer` and `plaus_context` added where a checked plausible answer exists and (with
+    filters=True) passes the format rule and, once data/plausible_checks.jsonl exists, the verification."""
     items = [json.loads(line) for line in open(path, encoding="utf-8")]
     if plausible and Path(plausible).exists():
         extra = {r["id"]: r["plaus_answer"] for r in map(json.loads, open(plausible, encoding="utf-8"))
                  if r.get("plaus_answer")}
+        cp = checks_path(plausible)
+        p_correct = {r["id"]: r["p_also_correct"] for r in map(json.loads, open(cp, encoding="utf-8"))} \
+            if cp.exists() else {}
         for it in items:
             if it["id"] in extra:
-                passage, why = check(it, extra[it["id"]])
+                cand = extra[it["id"]]
+                passage, why = check(it, cand)
                 if passage is None:
                     raise ValueError(f"{it['id']}: stored plausible answer fails the checks ({why})")
-                it["plaus_answer"], it["plaus_context"] = [extra[it["id"]]], passage
+                p = p_correct.get(it["id"])
+                if filters and (not format_ok(it, cand) or (p is not None and p >= VERIFY_MAX)):
+                    continue
+                it["plaus_answer"], it["plaus_context"] = [cand], passage
     return items
 
 
@@ -109,16 +141,38 @@ def generate(a):
     print(json.dumps(meta, indent=2))
 
 
+def verify(a):
+    """Ask the generator model (no sampling) whether each kept answer is also a correct answer."""
+    from trace_labels import VLLMJudge
+    items = [it for it in load_items(a.data, a.out, filters=False) if "plaus_answer" in it]
+    items = [it for it in items if format_ok(it, it["plaus_answer"][0])]
+    judge = VLLMJudge(argparse.Namespace(model=a.model, max_model_len=2048))
+    p = judge.yes_probs([VERIFY_PROMPT.format(q=it["question"].strip().rstrip("?") + "?", a=" | ".join(it["org_answer"]),
+                                              c=it["plaus_answer"][0]) for it in items])
+    with open(checks_path(a.out), "w", encoding="utf-8", newline="\n") as f:
+        for it, pi in zip(items, p):
+            f.write(json.dumps({"id": it["id"], "p_also_correct": pi, "verifier": a.model}) + "\n")
+    replay(a)
+
+
 def replay(a):
     items = [json.loads(line) for line in open(a.data, encoding="utf-8")]
     same = sum(substitute(it["org_context"], it["org_answer"], it["sub_answer"][0]) == it["sub_context"] for it in items)
     print(f"Our replacement rule reproduces NQ-Swap's wrong passage exactly for {same} of {len(items)} items "
           "(differences: NQ-Swap also replaces the answer inside longer words or numbers).")
+    if not Path(a.out).exists():
+        return
+    raw = [it for it in load_items(a.data, a.out, filters=False) if "plaus_answer" in it]
+    fmt = [it for it in raw if format_ok(it, it["plaus_answer"][0])]
+    final = [it for it in load_items(a.data, a.out) if "plaus_answer" in it]
+    print(f"Plausible swaps: {len(raw)} generated and checked, {len(raw) - len(fmt)} removed by the format rule, "
+          f"{len(fmt) - len(final)} removed by the verification"
+          f"{'' if checks_path(a.out).exists() else ' (not run yet)'}, {len(final)} used.")
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["generate", "check"])
+    ap.add_argument("cmd", choices=["generate", "verify", "check"])
     ap.add_argument("--data", default="data/items.jsonl")
     ap.add_argument("--model", default="microsoft/phi-4")
     ap.add_argument("--n", type=int, default=5, help="candidates per item; the first that passes the checks is kept")
@@ -126,7 +180,7 @@ def main():
     ap.add_argument("--seed", type=int, default=13)
     ap.add_argument("--out", default="data/plausible_answers.jsonl")
     a = ap.parse_args()
-    generate(a) if a.cmd == "generate" else replay(a)
+    {"generate": generate, "verify": verify, "check": replay}[a.cmd](a)
 
 
 if __name__ == "__main__":
