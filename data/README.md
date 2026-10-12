@@ -15,12 +15,17 @@ Counts are in `stats.json`.
 The file used for the results in this repository has this SHA-256 checksum:
 
 ```
-f0f368fb7c83ec2f5a2ded51c2d268315db262ced27242436331dd38987a6e27  data/items.jsonl
+0ad33638bebc7e92598fa0ec0829eb0f0527204fb17c096f883e48fb4f76683f  data/items.jsonl
 ```
 
 Check yours with `sha256sum data/items.jsonl` (Linux/macOS) or `certutil -hashfile data\items.jsonl SHA256` (Windows).
 If the source dataset changes, the checksum will differ and the item IDs (`nq0000`–`nq0999`) may no longer match the
 stored predictions.
+
+Correction (12 Oct 2026): until this date, this file listed the checksum `f0f368fb...6e27`. That is the same content
+with Windows line endings (CRLF), as first built. `prepare_data.py` now writes Unix line endings on every system. It
+also keeps the text normalisation that was used when the set was built: a later change to `scoring.normalize`
+(decimal numbers such as "9.21" kept as one token) had made the script select a different set of questions.
 
 Each line of `items.jsonl` holds: `id`, `question`, `org_answer` (true answers), `sub_answer` (planted answers),
 `org_context` (correct passage), `sub_context` (passage with the swapped answer), `irr_context` (another item's
