@@ -172,6 +172,18 @@ def test_replacement_rule_reproduces_nq_swap():
     assert same >= 0.95 * len(items), same
 
 
+def test_data_building_keeps_its_original_normalisation():
+    import prepare_data
+    from scoring import normalize
+    assert prepare_data.normalize("It's 9.21, the Three") == "its 9 21 3"  # as when data/items.jsonl was built
+    assert normalize("It's 9.21, the Three") == "its 921 3"                # answer scoring keeps decimals together
+    path = Path("data/items.jsonl")
+    if path.exists():
+        import hashlib
+        h = hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        assert h == "0ad33638bebc7e92598fa0ec0829eb0f0527204fb17c096f883e48fb4f76683f", "not the published question set"
+
+
 def test_agreement_metrics():
     assert cohen_kappa(["y", "n", "y", "n"], ["y", "n", "y", "n"]) == 1.0
     assert math.isclose(cohen_kappa(["y", "y", "n", "n"], ["y", "n", "y", "n"]), 0.0)
