@@ -3,9 +3,13 @@ data/items.jsonl
 
 # Uncompressed run outputs: the repository keeps predictions.jsonl.gz
 results/**/predictions.jsonl
+results_v2/**/predictions.jsonl
 
-# Smoke tests and caches
+# Smoke tests, own re-runs and caches
 smoke/
+smoke_v2/
+my_results/
+COMMIT.txt
 __pycache__/
 *.pyc
 .ipynb_checkpoints/

@@ -36,6 +36,24 @@ def auroc(scores, labels):
     return float((ranks[:len(pos)].sum() - len(pos) * (len(pos) + 1) / 2) / (len(pos) * len(neg)))
 
 
+def cohen_kappa(a, b):
+    """Agreement between two raters beyond chance (1 = perfect, 0 = chance level) for paired labels."""
+    a, b = list(a), list(b)
+    if not a or len(a) != len(b):
+        return float("nan")
+    cats = sorted(set(a) | set(b))
+    po = np.mean([x == y for x, y in zip(a, b)])
+    pe = sum(a.count(c) / len(a) * b.count(c) / len(b) for c in cats)
+    return float((po - pe) / (1 - pe)) if pe < 1 else float("nan")
+
+
+def sign_test(a, b):
+    """Exact two-sided sign test on discordant pairs (a = changed one way, b = the other way)."""
+    from math import comb
+    n, k = a + b, max(a, b)
+    return min(1.0, 2 * sum(comb(n, i) for i in range(k, n + 1)) / 2 ** n) if n else float("nan")
+
+
 def bootstrap_ci(fn, *arrays, n=1000, seed=13, alpha=0.05):
     """Percentile bootstrap CI for fn(*arrays), resampling items jointly."""
     arrays = [np.asarray(a) for a in arrays]

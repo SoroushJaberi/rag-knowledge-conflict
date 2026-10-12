@@ -57,11 +57,17 @@ def classify(pred, org_answer, sub_answer):
     return "other"
 
 
+def planted_answer(item, condition):
+    """The wrong answer that a condition's document states (NQ-Swap swap, or the plausible swap)."""
+    return item["plaus_answer"] if condition == "plausible" else item["sub_answer"]
+
+
 def split_answer(ids, logprobs, think_end_id, special_ids, thinking, decode):
     """Split generated token ids into reasoning and final answer.
 
     Returns (reasoning_ids, answer_ids, confidence_logprobs, truncated). Special tokens are dropped from the answer;
     whitespace-only tokens stay in the answer text but are left out of the confidence so they don't inflate it.
+    Tokens with log-prob None were inserted by us (budget forcing), not generated, so they never count as answer.
     """
     ids, logprobs = list(ids), list(logprobs)
     if think_end_id is not None and think_end_id in ids:
@@ -71,7 +77,7 @@ def split_answer(ids, logprobs, think_end_id, special_ids, thinking, decode):
         return ids, [], [], True
     else:
         reason, ans, lps = [], ids, logprobs
-    keep = [(t, lp) for t, lp in zip(ans, lps) if t not in special_ids]
+    keep = [(t, lp) for t, lp in zip(ans, lps) if t not in special_ids and lp is not None]
     return reason, [t for t, _ in keep], [lp for t, lp in keep if decode([t]).strip()], False
 
 

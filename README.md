@@ -6,6 +6,9 @@ GPU time and energy.
 
 Models: Qwen3 1.7B, 4B, 8B and 14B · Data: 1,000 questions from NQ-Swap · Hardware: one A100 40 GB (Google Colab)
 
+> **Work in progress on this branch:** a follow-up study, planned in [`STUDY_V2.md`](STUDY_V2.md). Everything below
+> describes the published study (tag `v1`) and is unchanged.
+
 ## Summary
 - **Wrong documents usually win.** For facts a model answers correctly without any document, a document that states a
   different answer makes it give that answer **49–68%** of the time. Larger models do no better: on the same 304
