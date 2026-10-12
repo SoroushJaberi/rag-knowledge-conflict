@@ -196,7 +196,8 @@ def section_prompts(runs, L, S):
           "\"Fewer / more\" = known facts overwritten only with `base` / only with this prompt.", "",
           "| Model | Thinking | Prompt | Known facts | Overwritten [95% CI] | Kept true answer | I don't know | "
           "Fewer / more than base | Correct doc: accuracy (all) | Correct doc: accuracy (unknown facts) | "
-          "Unrelated doc: I don't know | Unrelated doc: correct from memory |", "|" + "---|" * 12]
+          "Unrelated doc: I don't know | Unrelated doc: correct from memory | Unrelated doc: other answer |",
+          "|" + "---|" * 13]
     for model in models_of(runs):
         for think in (False, True):
             known, _ = known_set(runs, model, think)
@@ -210,12 +211,13 @@ def section_prompts(runs, L, S):
                 unknown = set(r["by"].get("gold", {})) - known
                 row = dict(known=k, vs_base=pr, gold_all=accuracy(r, "gold"), gold_unknown=accuracy(r, "gold", unknown),
                            irrelevant_idk=share(r, "irrelevant", ("abstain",)),
-                           irrelevant_memory=share(r, "irrelevant", ("original", "both")))
+                           irrelevant_memory=share(r, "irrelevant", ("original", "both")),
+                           irrelevant_other=share(r, "irrelevant", ("other", "substituted")))
                 S["prompts"][r["name"]] = row
                 L.append(f"| {short(model)} | {'on' if think else 'off'} | {prompt} | {k['n'] if k else 0} | "
                          f"{overwrite_cell(k)} | {pct(k and k['kept'])} | {pct(k and k['idk'])} | {paired_cell(pr)} | "
                          f"{pct(row['gold_all'])} | {pct(row['gold_unknown'])} | {pct(row['irrelevant_idk'])} | "
-                         f"{pct(row['irrelevant_memory'])} |")
+                         f"{pct(row['irrelevant_memory'])} | {pct(row['irrelevant_other'])} |")
     L.append("")
 
 
@@ -226,8 +228,9 @@ def section_budgets(runs, L, S):
           "stop thinking is replaced by \"Wait\". Overwriting on the fixed known-fact set of the thinking mode; cost per "
           "answer over the closed-book, correct-doc and wrong-doc conditions.", "",
           "| Model | Setting | Thinking tokens (wrong doc, mean) | Stopped by the budget (wrong doc) | Closed-book accuracy | "
-          "Known facts | Overwritten [95% CI] | Fewer / more than unlimited | Correct doc: accuracy | Tokens per answer | "
-          "GPU s per 1,000 | Wh per 1,000 |", "|" + "---|" * 12]
+          "Known facts | Overwritten [95% CI] | Kept true answer | I don't know | Fewer / more than unlimited | "
+          "Correct doc: accuracy | Correct doc: I don't know | Tokens per answer | GPU s per 1,000 | Wh per 1,000 |",
+          "|" + "---|" * 15]
     curves = {}
     for model in models_of(runs):
         known, _ = known_set(runs, model, True)
@@ -243,13 +246,14 @@ def section_budgets(runs, L, S):
             c = cost(r, CB_DOCS)
             row = dict(thinking_tokens=mean_of(r, "misleading", "n_thinking"),
                        forced=mean_of(r, "misleading", "forced_stop"), closed_book=accuracy(r, "closed_book"),
-                       known=k, vs_unlimited=pr, gold=accuracy(r, "gold"), cost=c)
+                       known=k, vs_unlimited=pr, gold=accuracy(r, "gold"), gold_idk=share(r, "gold", ("abstain",)),
+                       cost=c)
             S["budgets"][r["name"]] = row
             curves.setdefault(model, []).append((label, row))
             L.append(f"| {short(model)} | {label} | {num(row['thinking_tokens'])} | {pct(row['forced'])} | "
-                     f"{pct(row['closed_book'])} | {k['n'] if k else 0} | {overwrite_cell(k)} | {paired_cell(pr)} | "
-                     f"{pct(row['gold'])} | {num(c and c['tokens'])} | {num(c and c['gpu_s_per_1000'])} | "
-                     f"{num(c and c['wh_per_1000'], 1)} |")
+                     f"{pct(row['closed_book'])} | {k['n'] if k else 0} | {overwrite_cell(k)} | {pct(k and k['kept'])} | "
+                     f"{pct(k and k['idk'])} | {paired_cell(pr)} | {pct(row['gold'])} | {pct(row['gold_idk'])} | "
+                     f"{num(c and c['tokens'])} | {num(c and c['gpu_s_per_1000'])} | {num(c and c['wh_per_1000'], 1)} |")
     L.append("")
     return curves
 
