@@ -10,12 +10,22 @@ import argparse
 import json
 import random
 import re
+import string
 import urllib.request
 from pathlib import Path
 
-from scoring import normalize, contains
+from scoring import NUM_WORDS, contains
 
 DATASET = "pminervini/NQ-Swap"
+
+
+def normalize(s):
+    """scoring.normalize as it was when data/items.jsonl was built (5 Oct 2026), before decimal numbers such as "9.21"
+    were kept as one token. Kept unchanged here so that the published evaluation set is rebuilt exactly; scoring of
+    answers uses the current scoring.normalize."""
+    s = s.lower().replace("’", "'").replace("'", "")
+    s = "".join(ch if ch not in string.punctuation else " " for ch in s)
+    return " ".join(NUM_WORDS.get(t, t) for t in s.split() if t not in {"a", "an", "the"})
 
 
 def load_rows():
@@ -91,12 +101,12 @@ def main():
 
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    with open(out / "items.jsonl", "w", encoding="utf-8") as f:
+    with open(out / "items.jsonl", "w", encoding="utf-8", newline="\n") as f:  # same bytes on Windows and Linux
         for it in items:
             f.write(json.dumps(it, ensure_ascii=False) + "\n")
     stats["written"] = len(items)
     stats["mean_words_gold"] = round(sum(len(x["org_context"].split()) for x in items) / max(len(items), 1), 1)
-    json.dump(stats, open(out / "stats.json", "w"), indent=2)
+    json.dump(stats, open(out / "stats.json", "w", newline="\n"), indent=2)
     print(json.dumps(stats, indent=2))
 
 
