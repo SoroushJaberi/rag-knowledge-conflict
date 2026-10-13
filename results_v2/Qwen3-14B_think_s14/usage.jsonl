@@ -1,0 +1,5 @@
+{"condition": "closed_book", "chunk_start": 0, "n_prompts": 1000, "seconds": 141.81, "energy_j": 51671.7, "generated_tokens": 327945, "inserted_tokens": 0}
+{"condition": "gold", "chunk_start": 0, "n_prompts": 1000, "seconds": 234.74, "energy_j": 78263.1, "generated_tokens": 281930, "inserted_tokens": 0}
+{"condition": "misleading", "chunk_start": 0, "n_prompts": 1000, "seconds": 333.63, "energy_j": 110472.1, "generated_tokens": 423649, "inserted_tokens": 24}
+{"condition": "irrelevant", "chunk_start": 0, "n_prompts": 1000, "seconds": 85.79, "energy_j": 32998.4, "generated_tokens": 172963, "inserted_tokens": 0}
+{"condition": "plausible", "chunk_start": 0, "n_prompts": 841, "seconds": 207.29, "energy_j": 70277.0, "generated_tokens": 291426, "inserted_tokens": 0}

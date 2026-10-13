@@ -1,0 +1,3 @@
+{"condition": "gold", "chunk_start": 0, "n_prompts": 1000, "seconds": 169.71, "energy_j": 55647.3, "generated_tokens": 363509, "inserted_tokens": 96}
+{"condition": "misleading", "chunk_start": 0, "n_prompts": 1000, "seconds": 210.61, "energy_j": 74486.1, "generated_tokens": 551501, "inserted_tokens": 96}
+{"condition": "irrelevant", "chunk_start": 0, "n_prompts": 1000, "seconds": 55.57, "energy_j": 20615.5, "generated_tokens": 209246, "inserted_tokens": 0}
