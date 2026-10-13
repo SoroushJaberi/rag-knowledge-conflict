@@ -401,17 +401,23 @@ def figure(curves, out):
         return
     fig, axes = plt.subplots(1, 2, figsize=(9, 3.6))
     for model, rows in curves.items():
-        pts = [(row["cost"]["tokens"], row["known"]["overwrite"], row["closed_book"], label) for label, row in rows
-               if row["cost"] and row["known"] and label != "no thinking"]
+        pts = [(row["cost"]["tokens"], row["known"]["overwrite"], row["known"]["ci"], row["closed_book"], label)
+               for label, row in rows if row["cost"] and row["known"] and label != "no thinking"]
         if not pts:
             continue
-        x, y, cb, labels = zip(*sorted(pts))
-        axes[0].plot(x, [100 * v for v in y], marker="o", label=short(model))
+        x, y, ci, cb, labels = zip(*sorted(pts))
+        err = [[100 * (v - c[0]) for v, c in zip(y, ci)], [100 * (c[1] - v) for v, c in zip(y, ci)]]
+        line = axes[0].errorbar(x, [100 * v for v in y], yerr=err, marker="o", capsize=3, label=short(model))
         axes[1].plot(x, [100 * v for v in cb], marker="o", label=short(model))
+        base = dict(rows).get("no thinking")
+        if base and base["known"]:  # no thinking at all, for reference
+            axes[0].axhline(100 * base["known"]["overwrite"], ls="--", lw=0.8, color=line[0].get_color())
+            axes[1].axhline(100 * base["closed_book"], ls="--", lw=0.8, color=line[0].get_color())
         for xi, yi, lab in zip(x, y, labels):
             axes[0].annotate(lab.replace("budget ", ""), (xi, 100 * yi), fontsize=6, xytext=(3, 3), textcoords="offset points")
-    axes[0].set_ylabel("Known facts overwritten (%)")
+    axes[0].set_ylabel("Known facts overwritten (%), 95% CI")
     axes[1].set_ylabel("Closed-book accuracy (%)")
+    fig.suptitle("Thinking budget (dashed: no thinking)", fontsize=9)
     for ax in axes:
         ax.set_xscale("log")
         ax.set_xlabel("Generated tokens per answer (log scale)")
@@ -444,8 +450,8 @@ def main():
     section_costs(runs, L)
     out = Path(a.out)
     out.mkdir(exist_ok=True)
-    (out / "summary_step1.md").write_text("\n".join(L) + "\n", encoding="utf-8")
-    json.dump(S, open(out / "summary_step1.json", "w"), indent=2, default=float)
+    (out / "summary_step1.md").write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
+    json.dump(S, open(out / "summary_step1.json", "w", newline="\n"), indent=2, default=float)
     figure(curves, out)
     print("\n".join(L))
 
