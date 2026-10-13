@@ -326,8 +326,8 @@ def section_labels(runs, L, S, labels_dir):
         return
     L += ["## 5. What the reasoning says (LLM judge; check the agreement table before using these numbers)", "",
           "Known facts only. Share of traces where the judge answers yes (P(yes) > 0.5). Keyword = the v1 heuristic.", "",
-          "| Run | Wrong doc, overwritten: n | states true fact | notices conflict | cites instruction | keyword | "
-          "Correct doc: n | notices conflict (false alarm) | keyword |", "|---|---|---|---|---|---|---|---|---|"]
+          "| Run | Wrong document | Overwritten: n | states true fact | notices conflict | cites instruction | keyword | "
+          "Correct doc: n | notices conflict (false alarm) | keyword |", "|---|---|---|---|---|---|---|---|---|---|"]
     for r in sorted(judged, key=lambda r: (r["size"], r["name"])):
         cb = closed_book(runs, r) or {}
         sel = lambda cond, outcome=None: [(i, p) for i, p in r["by"].get(cond, {}).items() if (i, cond) in r["judge"]
@@ -335,14 +335,17 @@ def section_labels(runs, L, S, labels_dir):
                                           and (outcome is None or p["outcome"] == outcome)]
         yes = lambda pairs, cond, q: np.mean([(r["judge"][(i, cond)][q] or 0) > 0.5 for i, _ in pairs]) if pairs else None
         kw = lambda pairs: np.mean([mentions_conflict(p["reasoning"]) for _, p in pairs]) if pairs else None
-        cond = "plausible" if "plausible" in r["by"] else "misleading"
-        ow, gd = sel(cond, "substituted"), sel("gold")
-        row = dict(n_overwritten=len(ow), **{q: yes(ow, cond, q) for q in QUESTIONS}, keyword=kw(ow),
-                   n_gold=len(gd), gold_conflict=yes(gd, "gold", "notices_conflict"), gold_keyword=kw(gd))
-        S["labels"][r["name"]] = row
-        L.append(f"| {r['name']} | {len(ow)} | {pct(row['states_true_fact'])} | {pct(row['notices_conflict'])} | "
-                 f"{pct(row['cites_instruction'])} | {pct(row['keyword'])} | {len(gd)} | {pct(row['gold_conflict'])} | "
-                 f"{pct(row['gold_keyword'])} |")
+        gd = sel("gold")
+        for cond, label in (("misleading", "NQ-Swap"), ("plausible", "plausible")):
+            ow = sel(cond, "substituted")
+            if not ow:
+                continue
+            row = dict(n_overwritten=len(ow), **{q: yes(ow, cond, q) for q in QUESTIONS}, keyword=kw(ow),
+                       n_gold=len(gd), gold_conflict=yes(gd, "gold", "notices_conflict"), gold_keyword=kw(gd))
+            S["labels"][f"{r['name']}/{cond}"] = row
+            L.append(f"| {r['name']} | {label} | {len(ow)} | {pct(row['states_true_fact'])} | "
+                     f"{pct(row['notices_conflict'])} | {pct(row['cites_instruction'])} | {pct(row['keyword'])} | "
+                     f"{len(gd)} | {pct(row['gold_conflict'])} | {pct(row['gold_keyword'])} |")
     L.append("")
     sheet_path, key_path = label_files(labels_dir)
     if not sheet_path.exists() or not key_path.exists():
