@@ -163,6 +163,8 @@ something it knows, so a useful detector has to estimate that first.
 The two 2026 papers are the closest. This study differs in using open-weight models across four sizes, the same
 weights with thinking on and off, and measured generation cost and energy.
 
+For a complementary evaluation with unmodified passages, [Knowledge Conflicts with Real Documents](https://arxiv.org/abs/2404.16032) selects cases where a model's answer conflicts with an existing supporting passage. [CoFaithfulQA](https://huggingface.co/datasets/chengpingan/CoFaithfulQA), introduced in [ParamMute](https://doi.org/10.52202/085713-3356), filters for a stable closed-book answer that disagrees with correct evidence. These evaluations test whether models adopt correct evidence when their memory is wrong. The NQ-Swap wrong-document condition here measures how often a false passage overrides a correct answer.
+
 ## Reproduce
 **Re-run the analysis (no GPU).** All model outputs are included (`results/*/predictions.jsonl.gz`).
 ```bash
